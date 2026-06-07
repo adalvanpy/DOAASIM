@@ -10,11 +10,3 @@ services:
       - ./backend:/app
     ports:
       - "8000:8000"
-
-  php:
-    image: php:8.2-apache
-    container_name: aasi_php
-    volumes:
-      - ./frontend:/var/www/html
-    ports:
-      - "8080:80"

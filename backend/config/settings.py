@@ -30,7 +30,7 @@ INSTALLED_APPS = [
     'devices',
 ]
 
-ALLOWED_HOSTS = ['api', 'localhost', '127.0.0.1', '0.0.0.0']
+ALLOWED_HOSTS = ['api', 'localhost', '127.0.0.1', '0.0.0.0', '192.168.1.101']
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',

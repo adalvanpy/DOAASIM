@@ -1,0 +1,10 @@
+# laudos
+*.pdf
+# imagens
+*.jpg
+*.jpeg
+*.png
+# arquivos de cache
+*.cache
+# arquivos de log
+*.log
