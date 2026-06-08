@@ -94,6 +94,14 @@ class _DashboardPageState extends State<DashboardPage> {
     return lista.take(3).toList();
   }
 
+  List<Device> get latestAparelhosDoDoador {
+    final lista = _aparelhos
+        .where((d) => _isMyUser(d.doador))
+        .toList();
+    lista.sort((a, b) => b.criadoEm.compareTo(a.criadoEm));
+    return lista.take(3).toList();
+  }
+
   List<Device> get aparelhosDisponiveisNaoInscritos {
     final idsInscritos = candidaturasDoUsuario.map((c) => c.aparelho).toSet();
     return _aparelhos.where((a) => a.status.toUpperCase() == 'DISPONIVEL' && !idsInscritos.contains(a.id)).toList();
@@ -106,7 +114,6 @@ class _DashboardPageState extends State<DashboardPage> {
     _aparelhos = List<Device>.from(widget.aparelhos);
     _deviceService = DeviceService(token: widget.token);
     _candidaturaService = CandidaturaService(token: widget.token);
-    
   }
 
   Future<void> _reloadCandidaturas() async {
@@ -229,303 +236,303 @@ class _DashboardPageState extends State<DashboardPage> {
     );
   }
 
-Widget _buildDoacaoForm() {
-  return Card(
-    elevation: 2,
-    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(AppDimensions.cardBorderRadius)),
-    child: Padding(
-      padding: const EdgeInsets.all(AppDimensions.spacingLG),
-      child: Form(
-        key: _formKey,
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                const Text('Doar aparelho', style: AppTextStyle.headlineSmall),
-                IconButton(
-                  icon: const Icon(Icons.close),
-                  onPressed: () {
-                    setState(() {
-                      _showDoacaoForm = false;
-                      _nomeController.clear();
-                      _selectedModelo = null;
-                      _selectedPerda = null;
-                      _descricaoController.clear();
-                    });
-                  },
-                ),
-              ],
-            ),
-            const SizedBox(height: AppDimensions.spacingLG),
-            TextFormField(
-              controller: _nomeController,
-              decoration: const InputDecoration(labelText: 'Nome do aparelho'),
-              validator: (value) => value == null || value.isEmpty ? 'Informe o nome do aparelho' : null,
-            ),
-            const SizedBox(height: AppDimensions.spacingMD),
-            DropdownButtonFormField<String>(
-              value: _selectedModelo,
-              items: const [
-                DropdownMenuItem(value: 'RETRO', child: Text('Retroauricular (BTE)')),
-                DropdownMenuItem(value: 'INTRA', child: Text('Intra-auricular (ITE/CIC)')),
-                DropdownMenuItem(value: 'RIC', child: Text('Receptor no Canal (RIC)')),
-              ],
-              onChanged: (value) => setState(() => _selectedModelo = value),
-              decoration: const InputDecoration(labelText: 'Modelo anatômico'),
-              validator: (value) => value == null || value.isEmpty ? 'Informe o modelo anatômico' : null,
-            ),
-            const SizedBox(height: AppDimensions.spacingMD),
-            DropdownButtonFormField<String>(
-              value: _selectedPerda,
-              items: const [
-                DropdownMenuItem(value: 'LEVE', child: Text('Leve')),
-                DropdownMenuItem(value: 'LEVE_MODERADA', child: Text('Leve a Moderada')),
-                DropdownMenuItem(value: 'MODERADA', child: Text('Moderada')),
-                DropdownMenuItem(value: 'MODERADA_SEVERA', child: Text('Moderada a Severa')),
-                DropdownMenuItem(value: 'SEVERA', child: Text('Severa')),
-                DropdownMenuItem(value: 'SEVERA_PROFUNDA', child: Text('Severa a Profunda')),
-                DropdownMenuItem(value: 'PROFUNDA', child: Text('Profunda')),
-              ],
-              onChanged: (value) => setState(() => _selectedPerda = value),
-              decoration: const InputDecoration(labelText: 'Perda indicada'),
-              validator: (value) => value == null || value.isEmpty ? 'Informe a perda indicada' : null,
-            ),
-            const SizedBox(height: AppDimensions.spacingMD),
-            TextFormField(
-              controller: _descricaoController,
-              decoration: const InputDecoration(labelText: 'Descrição'),
-              maxLines: 3,
-              validator: (value) => value == null || value.isEmpty ? 'Informe a descrição do aparelho' : null,
-            ),
-            const SizedBox(height: AppDimensions.spacingLG),
-            SizedBox(
-              width: double.infinity,
-              child: ElevatedButton(
-                onPressed: _isSubmitting ? null : _submitDoacao,
-                child: Text(_isSubmitting ? 'Enviando...' : 'Enviar doação'),
-              ),
-            ),
-          ],
-        ),
-      ),
-    ),
-  );
-}
-
-Widget _buildCandidaturaForm() {
-  final aparelhosDisponiveis = aparelhosDisponiveisNaoInscritos;
-  
-  return Card(
-    elevation: 2,
-    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(AppDimensions.cardBorderRadius)),
-    child: Padding(
-      padding: const EdgeInsets.all(AppDimensions.spacingLG),
-      child: Form(
-        key: _candidaturaFormKey,
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                const Text('Nova candidatura', style: AppTextStyle.headlineSmall),
-                IconButton(
-                  icon: const Icon(Icons.close),
-                  onPressed: () {
-                    setState(() {
-                      _showCandidaturaForm = false;
-                      _selectedAparelhoId = null;
-                      _selectedLaudoFileName = null;
-                      _selectedLaudoFile = null;
-                      _candidaturaObservacaoController.clear();
-                    });
-                  },
-                ),
-              ],
-            ),
-            const SizedBox(height: AppDimensions.spacingLG),
-            if (aparelhosDisponiveis.isEmpty)
-              const Padding(
-                padding: EdgeInsets.all(AppDimensions.spacingLG),
-                child: Center(
-                  child: Text(
-                    'Não há aparelhos disponíveis para candidatura no momento.',
-                    style: TextStyle(color: AppColors.textSecondary),
-                    textAlign: TextAlign.center,
-                  ),
-                ),
-              )
-            else
-              DropdownButtonFormField<int>(
-                value: _selectedAparelhoId,
-                items: aparelhosDisponiveis.map((a) => DropdownMenuItem<int>(
-                  value: a.id, 
-                  child: Text('${a.nome} • ${a.modeloDisplay}')
-                )).toList(),
-                onChanged: (v) => setState(() => _selectedAparelhoId = v),
-                decoration: const InputDecoration(labelText: 'Aparelho'),
-                validator: (v) => v == null ? 'Selecione um aparelho disponível' : null,
-              ),
-            const SizedBox(height: AppDimensions.spacingMD),
-            Row(
-              children: [
-                Expanded(child: Text(_selectedLaudoFileName ?? 'Nenhum laudo selecionado', style: AppTextStyle.bodyMedium)),
-                TextButton(
-                  onPressed: () async {
-                    final result = await FilePicker.pickFiles(
-                      type: FileType.custom,
-                      allowedExtensions: ['pdf', 'jpg', 'jpeg', 'png', 'doc', 'docx', 'txt'],
-                    );
-                    if (result != null && result.files.isNotEmpty) {
-                      final pf = result.files.first;
+  Widget _buildDoacaoForm() {
+    return Card(
+      elevation: 2,
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(AppDimensions.cardBorderRadius)),
+      child: Padding(
+        padding: const EdgeInsets.all(AppDimensions.spacingLG),
+        child: Form(
+          key: _formKey,
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  const Text('Doar aparelho', style: AppTextStyle.headlineSmall),
+                  IconButton(
+                    icon: const Icon(Icons.close),
+                    onPressed: () {
                       setState(() {
-                        _selectedLaudoFileName = pf.name;
-                        _selectedLaudoFile = File(pf.path!);
+                        _showDoacaoForm = false;
+                        _nomeController.clear();
+                        _selectedModelo = null;
+                        _selectedPerda = null;
+                        _descricaoController.clear();
                       });
-                    }
-                  },
-                  child: const Text('Selecionar laudo'),
-                ),
-              ],
-            ),
-            const SizedBox(height: AppDimensions.spacingMD),
-            TextFormField(
-              controller: _candidaturaObservacaoController,
-              decoration: const InputDecoration(labelText: 'Observação'),
-              maxLines: 3,
-            ),
-            const SizedBox(height: AppDimensions.spacingLG),
-            SizedBox(
-              width: double.infinity,
-              child: ElevatedButton(
-                onPressed: (aparelhosDisponiveis.isEmpty || _isSubmittingCandidatura) ? null : _submitCandidatura,
-                child: Text(_isSubmittingCandidatura ? 'Enviando...' : 'Enviar candidatura'),
+                    },
+                  ),
+                ],
               ),
-            ),
-          ],
+              const SizedBox(height: AppDimensions.spacingLG),
+              TextFormField(
+                controller: _nomeController,
+                decoration: const InputDecoration(labelText: 'Nome do aparelho'),
+                validator: (value) => value == null || value.isEmpty ? 'Informe o nome do aparelho' : null,
+              ),
+              const SizedBox(height: AppDimensions.spacingMD),
+              DropdownButtonFormField<String>(
+                value: _selectedModelo,
+                items: const [
+                  DropdownMenuItem(value: 'RETRO', child: Text('Retroauricular (BTE)')),
+                  DropdownMenuItem(value: 'INTRA', child: Text('Intra-auricular (ITE/CIC)')),
+                  DropdownMenuItem(value: 'RIC', child: Text('Receptor no Canal (RIC)')),
+                ],
+                onChanged: (value) => setState(() => _selectedModelo = value),
+                decoration: const InputDecoration(labelText: 'Modelo anatômico'),
+                validator: (value) => value == null || value.isEmpty ? 'Informe o modelo anatômico' : null,
+              ),
+              const SizedBox(height: AppDimensions.spacingMD),
+              DropdownButtonFormField<String>(
+                value: _selectedPerda,
+                items: const [
+                  DropdownMenuItem(value: 'LEVE', child: Text('Leve')),
+                  DropdownMenuItem(value: 'LEVE_MODERADA', child: Text('Leve a Moderada')),
+                  DropdownMenuItem(value: 'MODERADA', child: Text('Moderada')),
+                  DropdownMenuItem(value: 'MODERADA_SEVERA', child: Text('Moderada a Severa')),
+                  DropdownMenuItem(value: 'SEVERA', child: Text('Severa')),
+                  DropdownMenuItem(value: 'SEVERA_PROFUNDA', child: Text('Severa a Profunda')),
+                  DropdownMenuItem(value: 'PROFUNDA', child: Text('Profunda')),
+                ],
+                onChanged: (value) => setState(() => _selectedPerda = value),
+                decoration: const InputDecoration(labelText: 'Perda indicada'),
+                validator: (value) => value == null || value.isEmpty ? 'Informe a perda indicada' : null,
+              ),
+              const SizedBox(height: AppDimensions.spacingMD),
+              TextFormField(
+                controller: _descricaoController,
+                decoration: const InputDecoration(labelText: 'Descrição'),
+                maxLines: 3,
+                validator: (value) => value == null || value.isEmpty ? 'Informe a descrição do aparelho' : null,
+              ),
+              const SizedBox(height: AppDimensions.spacingLG),
+              SizedBox(
+                width: double.infinity,
+                child: ElevatedButton(
+                  onPressed: _isSubmitting ? null : _submitDoacao,
+                  child: Text(_isSubmitting ? 'Enviando...' : 'Enviar doação'),
+                ),
+              ),
+            ],
+          ),
         ),
       ),
-    ),
-  );
-}
-
-Future<void> _submitDoacao() async {
-  if (!_formKey.currentState!.validate()) return;
-  if (!mounted) return;
-
-  setState(() => _isSubmitting = true);
-
-  final uri = Uri.parse('${ApiConstants.baseUrl}${ApiConstants.devices}');
-  try {
-    final response = await http.post(
-      uri,
-      headers: {
-        'Authorization': 'Bearer ${widget.token}',
-        'Content-Type': 'application/json',
-      },
-      body: jsonEncode({
-        'nome': _nomeController.text,
-        'modelo_anatomico': _selectedModelo ?? '',
-        'perda_indicada': _selectedPerda ?? '',
-        'descricao': _descricaoController.text,
-      }),
     );
+  }
 
-    if (mounted) {
-      if (response.statusCode == 201 || response.statusCode == 200) {
-        await _reloadAparelhos();
-        setState(() {
-          _isSubmitting = false;
-          _showDoacaoForm = false;
-          _nomeController.clear();
-          _selectedModelo = null;
-          _selectedPerda = null;
-          _descricaoController.clear();
-        });
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Doação enviada com sucesso!')),
-        );
-      } else {
+  Widget _buildCandidaturaForm() {
+    final aparelhosDisponiveis = aparelhosDisponiveisNaoInscritos;
+    
+    return Card(
+      elevation: 2,
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(AppDimensions.cardBorderRadius)),
+      child: Padding(
+        padding: const EdgeInsets.all(AppDimensions.spacingLG),
+        child: Form(
+          key: _candidaturaFormKey,
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  const Text('Nova candidatura', style: AppTextStyle.headlineSmall),
+                  IconButton(
+                    icon: const Icon(Icons.close),
+                    onPressed: () {
+                      setState(() {
+                        _showCandidaturaForm = false;
+                        _selectedAparelhoId = null;
+                        _selectedLaudoFileName = null;
+                        _selectedLaudoFile = null;
+                        _candidaturaObservacaoController.clear();
+                      });
+                    },
+                  ),
+                ],
+              ),
+              const SizedBox(height: AppDimensions.spacingLG),
+              if (aparelhosDisponiveis.isEmpty)
+                const Padding(
+                  padding: EdgeInsets.all(AppDimensions.spacingLG),
+                  child: Center(
+                    child: Text(
+                      'Não há aparelhos disponíveis para candidatura no momento.',
+                      style: TextStyle(color: AppColors.textSecondary),
+                      textAlign: TextAlign.center,
+                    ),
+                  ),
+                )
+              else
+                DropdownButtonFormField<int>(
+                  value: _selectedAparelhoId,
+                  items: aparelhosDisponiveis.map((a) => DropdownMenuItem<int>(
+                    value: a.id, 
+                    child: Text('${a.nome} • ${a.modeloDisplay}')
+                  )).toList(),
+                  onChanged: (v) => setState(() => _selectedAparelhoId = v),
+                  decoration: const InputDecoration(labelText: 'Aparelho'),
+                  validator: (v) => v == null ? 'Selecione um aparelho disponível' : null,
+                ),
+              const SizedBox(height: AppDimensions.spacingMD),
+              Row(
+                children: [
+                  Expanded(child: Text(_selectedLaudoFileName ?? 'Nenhum laudo selecionado', style: AppTextStyle.bodyMedium)),
+                  TextButton(
+                    onPressed: () async {
+                      final result = await FilePicker.pickFiles(
+                        type: FileType.custom,
+                        allowedExtensions: ['pdf', 'doc', 'docx', 'txt'],
+                      );
+                      if (result != null && result.files.isNotEmpty) {
+                        final pf = result.files.first;
+                        setState(() {
+                          _selectedLaudoFileName = pf.name;
+                          _selectedLaudoFile = File(pf.path!);
+                        });
+                      }
+                    },
+                    child: const Text('Selecionar laudo'),
+                  ),
+                ],
+              ),
+              const SizedBox(height: AppDimensions.spacingMD),
+              TextFormField(
+                controller: _candidaturaObservacaoController,
+                decoration: const InputDecoration(labelText: 'Observação'),
+                maxLines: 3,
+              ),
+              const SizedBox(height: AppDimensions.spacingLG),
+              SizedBox(
+                width: double.infinity,
+                child: ElevatedButton(
+                  onPressed: (aparelhosDisponiveis.isEmpty || _isSubmittingCandidatura) ? null : _submitCandidatura,
+                  child: Text(_isSubmittingCandidatura ? 'Enviando...' : 'Enviar candidatura'),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  Future<void> _submitDoacao() async {
+    if (!_formKey.currentState!.validate()) return;
+    if (!mounted) return;
+
+    setState(() => _isSubmitting = true);
+
+    final uri = Uri.parse('${ApiConstants.baseUrl}${ApiConstants.devices}');
+    try {
+      final response = await http.post(
+        uri,
+        headers: {
+          'Authorization': 'Bearer ${widget.token}',
+          'Content-Type': 'application/json',
+        },
+        body: jsonEncode({
+          'nome': _nomeController.text,
+          'modelo_anatomico': _selectedModelo ?? '',
+          'perda_indicada': _selectedPerda ?? '',
+          'descricao': _descricaoController.text,
+        }),
+      );
+
+      if (mounted) {
+        if (response.statusCode == 201 || response.statusCode == 200) {
+          await _reloadAparelhos();
+          setState(() {
+            _isSubmitting = false;
+            _showDoacaoForm = false;
+            _nomeController.clear();
+            _selectedModelo = null;
+            _selectedPerda = null;
+            _descricaoController.clear();
+          });
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text('Doação enviada com sucesso!')),
+          );
+        } else {
+          setState(() => _isSubmitting = false);
+          final body = response.body.isNotEmpty ? response.body : 'HTTP ${response.statusCode}';
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text('Erro ao salvar aparelho: $body')),
+          );
+        }
+      }
+    } catch (e) {
+      if (mounted) {
         setState(() => _isSubmitting = false);
-        final body = response.body.isNotEmpty ? response.body : 'HTTP ${response.statusCode}';
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Erro ao salvar aparelho: $body')),
+          SnackBar(content: Text('Falha ao salvar aparelho: $e')),
         );
       }
     }
-  } catch (e) {
-    if (mounted) {
-      setState(() => _isSubmitting = false);
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Falha ao salvar aparelho: $e')),
-      );
-    }
   }
-}
 
-Future<void> _submitCandidatura() async {
-  if (!_candidaturaFormKey.currentState!.validate()) return;
-  if (!mounted) return;
-  
-  if (_selectedLaudoFile == null) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('Selecione o laudo antes de enviar.')),
-    );
-    return;
-  }
-  
-  final uri = Uri.parse('${ApiConstants.baseUrl}${ApiConstants.candidates}');
-  final request = http.MultipartRequest('POST', uri);
-  request.headers['Authorization'] = 'Bearer ${widget.token}';
-  request.fields['aparelho'] = _selectedAparelhoId.toString();
-  if (_candidaturaObservacaoController.text.isNotEmpty) {
-    request.fields['observacao'] = _candidaturaObservacaoController.text;
-  }
-  
-  final laudoFile = _selectedLaudoFile!;
-  final stream = http.ByteStream(laudoFile.openRead());
-  final length = await laudoFile.length();
-  final multipartFile = http.MultipartFile('laudo_exame', stream, length, filename: _selectedLaudoFileName);
-  request.files.add(multipartFile);
-  
-  setState(() => _isSubmittingCandidatura = true);
-  
-  try {
-    final streamedResponse = await request.send();
-    final response = await http.Response.fromStream(streamedResponse);
+  Future<void> _submitCandidatura() async {
+    if (!_candidaturaFormKey.currentState!.validate()) return;
+    if (!mounted) return;
     
-    if (mounted) {
-      if (response.statusCode == 201 || response.statusCode == 200) {
-        setState(() {
-          _isSubmittingCandidatura = false;
-          _showCandidaturaForm = false;
-          _selectedAparelhoId = null;
-          _selectedLaudoFileName = null;
-          _selectedLaudoFile = null;
-          _candidaturaObservacaoController.clear();
-        });
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Candidatura enviada com sucesso!')),
-        );
-        await _reloadCandidaturas();
-      } else {
+    if (_selectedLaudoFile == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Selecione o laudo antes de enviar.')),
+      );
+      return;
+    }
+    
+    final uri = Uri.parse('${ApiConstants.baseUrl}${ApiConstants.candidates}');
+    final request = http.MultipartRequest('POST', uri);
+    request.headers['Authorization'] = 'Bearer ${widget.token}';
+    request.fields['aparelho'] = _selectedAparelhoId.toString();
+    if (_candidaturaObservacaoController.text.isNotEmpty) {
+      request.fields['observacao'] = _candidaturaObservacaoController.text;
+    }
+    
+    final laudoFile = _selectedLaudoFile!;
+    final stream = http.ByteStream(laudoFile.openRead());
+    final length = await laudoFile.length();
+    final multipartFile = http.MultipartFile('laudo_exame', stream, length, filename: _selectedLaudoFileName);
+    request.files.add(multipartFile);
+    
+    setState(() => _isSubmittingCandidatura = true);
+    
+    try {
+      final streamedResponse = await request.send();
+      final response = await http.Response.fromStream(streamedResponse);
+      
+      if (mounted) {
+        if (response.statusCode == 201 || response.statusCode == 200) {
+          setState(() {
+            _isSubmittingCandidatura = false;
+            _showCandidaturaForm = false;
+            _selectedAparelhoId = null;
+            _selectedLaudoFileName = null;
+            _selectedLaudoFile = null;
+            _candidaturaObservacaoController.clear();
+          });
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text('Candidatura enviada com sucesso!')),
+          );
+          await _reloadCandidaturas();
+        } else {
+          setState(() => _isSubmittingCandidatura = false);
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text('Erro ao enviar candidatura: ${response.statusCode}')),
+          );
+        }
+      }
+    } catch (e) {
+      if (mounted) {
         setState(() => _isSubmittingCandidatura = false);
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Erro ao enviar candidatura: ${response.statusCode}')),
+          SnackBar(content: Text('Falha ao enviar candidatura: $e')),
         );
       }
     }
-  } catch (e) {
-    if (mounted) {
-      setState(() => _isSubmittingCandidatura = false);
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Falha ao enviar candidatura: $e')),
-      );
-    }
   }
-}
 
   @override
   void dispose() {
@@ -575,7 +582,11 @@ Future<void> _submitCandidatura() async {
               _buildSectionHeader('Minhas últimas candidaturas', Icons.assignment),
               if (latestCandidaturas.isEmpty) const Text('Nenhuma candidatura encontrada.', style: AppTextStyle.bodyMedium)
               else Column(children: latestCandidaturas.map((c) => CandidaturaCard(candidatura: c, onTap: () async {
-                final result = await Navigator.push(context, MaterialPageRoute(builder: (_) => CandidaturaDetailPage(candidatura: c, token: widget.token, perfil: widget.perfil,)));
+                final result = await Navigator.push(context, MaterialPageRoute(builder: (_) => CandidaturaDetailPage(
+                  candidatura: c, 
+                  token: widget.token, 
+                  perfil: widget.perfil,
+                )));
                 if (mounted && result == true) await _reloadCandidaturas();
               })).toList()),
             ] else if (isDoador) ...[
@@ -589,12 +600,14 @@ Future<void> _submitCandidatura() async {
               const SizedBox(height: AppDimensions.spacingLG),
               if (_showDoacaoForm) ...[_buildDoacaoForm(), const SizedBox(height: AppDimensions.spacingLG)],
               _buildSectionHeader('Meus últimos aparelhos', Icons.hearing),
-              if (latestAparelhos.isEmpty) const Text('Nenhum aparelho cadastrado ainda.', style: AppTextStyle.bodyMedium)
-              else Column(children: latestAparelhos.map((a) => DeviceCard(
-                aparelho: a,
-                isAdmin: false,
-                showActions: false,
-              )).toList()),
+              if (latestAparelhosDoDoador.isEmpty) 
+                const Text('Nenhum aparelho cadastrado ainda.', style: AppTextStyle.bodyMedium)
+              else 
+                Column(children: latestAparelhosDoDoador.map((a) => DeviceCard(
+                  aparelho: a,
+                  isAdmin: false,
+                  showActions: false,
+                )).toList()),
             ] else if (isAdmin) ...[
               const Padding(padding: EdgeInsets.only(bottom: AppDimensions.spacingSM), child: Text('APARELHOS', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: AppColors.textSecondary))),
               Row(
@@ -612,7 +625,7 @@ Future<void> _submitCandidatura() async {
               Row(
                 children: [
                   Expanded(child: DashboardCard(title: 'Em Análise', value: totalCandidatosEmAnalise, icon: Icons.person_search, color: Colors.purple, onTap: () async {
-                    final result = await Navigator.push(context, MaterialPageRoute(builder: (_) => CandidatosPage(candidaturas: _candidaturas, token: widget.token)));
+                    final result = await Navigator.push(context, MaterialPageRoute(builder: (_) => CandidatosPage(candidaturas: _candidaturas, token: widget.token, perfil: widget.perfil,)));
                     if (mounted && result == true) await _reloadCandidaturas();
                   })),
                   const SizedBox(width: AppDimensions.spacingMD),
@@ -630,7 +643,11 @@ Future<void> _submitCandidatura() async {
               _buildSectionHeader('Últimas candidaturas', Icons.assignment),
               if (latestCandidaturas.isEmpty) const Text('Nenhuma candidatura encontrada.', style: AppTextStyle.bodyMedium)
               else Column(children: latestCandidaturas.map((c) => CandidaturaCard(candidatura: c, onTap: () async {
-                final result = await Navigator.push(context, MaterialPageRoute(builder: (_) => CandidaturaDetailPage(candidatura: c, token: widget.token)));
+                final result = await Navigator.push(context, MaterialPageRoute(builder: (_) => CandidaturaDetailPage(
+                  candidatura: c, 
+                  token: widget.token,
+                  perfil: widget.perfil,  // ← ADICIONADO
+                )));
                 if (mounted && result == true) await _reloadCandidaturas();
               })).toList()),
               const SizedBox(height: AppDimensions.spacingLG),

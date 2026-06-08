@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'dart:convert';
 import 'package:http/http.dart' as http;
 import '../models/candidatura.dart';
+import '../models/user_model.dart';  // ← ADICIONAR
 import '../core/constants/api_constants.dart';
 import '../core/themes/app_colors.dart';
 import '../core/themes/app_dimensions.dart';
@@ -13,11 +14,13 @@ import 'candidatura_detail_page.dart';
 class CandidatosPage extends StatefulWidget {
   final List<Candidatura> candidaturas;
   final String token;
+  final Perfil? perfil; 
 
   const CandidatosPage({
     super.key, 
     required this.candidaturas,
     required this.token,
+    this.perfil, 
   });
 
   @override
@@ -82,6 +85,7 @@ class _CandidatosPageState extends State<CandidatosPage> {
                               builder: (_) => CandidaturaDetailPage(
                                 candidatura: candidatura,
                                 token: widget.token,
+                                perfil: widget.perfil,
                               ),
                             ),
                           );

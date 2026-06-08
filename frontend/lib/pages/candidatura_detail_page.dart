@@ -99,7 +99,11 @@ class _CandidaturaDetailPageState extends State<CandidaturaDetailPage> {
 
   @override
   Widget build(BuildContext context) {
+    
     final statusColor = StatusHelper.getCandidaturaStatusColor(widget.candidatura.status);
+      print('isEmpresa: $isEmpresa');
+      print('Status: ${widget.candidatura.status}');
+      print('Status upper: ${widget.candidatura.status.toUpperCase()}');
     
     return Scaffold(
       appBar: AppBar(
