@@ -46,7 +46,7 @@ Altere o arquivo frontend/lib/core/constants/api_constants.dart:
 dart
 class ApiConstants {
   // Altere para o IPv4 da sua máquina (ex: 192.xxx.x.1)
-  static const String baseUrl = 'http://192.168.1.100:8000/api';
+  static const String baseUrl = 'http://192.168.1.xxx:8000/api';
   
   // Para emulador Android
   // static const String baseUrl = 'http://10.0.2.2:8000/api';
