@@ -26,7 +26,7 @@ cd DOAASIM
 2. Inicie o Backend
 bash
 docker-compose up -d
-O backend estará disponível em: http://localhost:8000
+O backend estará disponível em: http://localhost:8000/admin/
 
 3. Configure o Frontend para Mobile
 Para executar o aplicativo em um dispositivo físico (celular/tablet):
@@ -45,7 +45,7 @@ Altere o arquivo frontend/lib/core/constants/api_constants.dart:
 
 dart
 class ApiConstants {
-  // Altere para o IPv4 da sua máquina (ex: 192.168.1.100)
+  // Altere para o IPv4 da sua máquina (ex: 192.xxx.x.1)
   static const String baseUrl = 'http://192.168.1.100:8000/api';
   
   // Para emulador Android
